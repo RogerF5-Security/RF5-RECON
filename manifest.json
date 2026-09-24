@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "RF5 Recon",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Reconocimiento pasivo de superficies web para auditorias autorizadas.",
-  "action": { "default_title": "RF5 Recon", "default_popup": "popup.html" },
+  "action": { "default_title": "RF5 Recon", "default_popup": "popup.html", "default_icon": { "16": "icon128.png", "32": "icon128.png", "48": "icon128.png", "128": "icon128.png" } },
+  "icons": { "16": "icon128.png", "32": "icon128.png", "48": "icon128.png", "128": "icon128.png" },
   "background": { "service_worker": "service-worker.js", "type": "module" },
   "permissions": ["activeTab", "scripting", "cookies"],
   "host_permissions": ["<all_urls>"]
 }
-
