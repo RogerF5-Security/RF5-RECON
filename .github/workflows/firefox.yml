@@ -1,0 +1,49 @@
+name: Validate Firefox package
+
+on:
+  push:
+    paths:
+      - '*.js'
+      - '*.html'
+      - '*.css'
+      - 'manifest.json'
+      - 'icon128.png'
+      - 'scripts/build_firefox.py'
+      - 'tests/firefox.test.cjs'
+      - 'docs/firefox/**'
+      - '.github/workflows/firefox.yml'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firefox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build Firefox ZIP
+        run: python3 scripts/build_firefox.py
+      - name: Check JavaScript syntax
+        run: |
+          node --check dist/firefox/extension/service-worker.js
+          node --check dist/firefox/extension/popup.js
+      - name: Test Firefox adapter
+        run: node --test tests/firefox.test.cjs
+      - name: Mozilla web-ext lint
+        run: npx --yes web-ext@10.8.0 lint --source-dir dist/firefox/extension --warnings-as-errors
+      - name: Keep validated package
+        uses: actions/upload-artifact@v4
+        with:
+          name: RF5-Recon-Firefox
+          path: |
+            dist/firefox/*.zip
+            dist/firefox/*.sha256
+          if-no-files-found: error
