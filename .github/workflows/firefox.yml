@@ -9,6 +9,7 @@ on:
       - 'manifest.json'
       - 'icon128.png'
       - 'scripts/build_firefox.py'
+      - 'scripts/firefox_popup.js'
       - 'tests/firefox.test.cjs'
       - 'docs/firefox/**'
       - '.github/workflows/firefox.yml'
