@@ -56,6 +56,9 @@ test('Firefox package preserves upgrade identity and declares external DNS trans
   assert.equal(m.manifest_version, 3);
   assert.equal(m.browser_specific_settings.gecko.id, 'rf5-recon@rogerf5.dev');
   assert.equal(m.browser_specific_settings.gecko.strict_min_version, '140.0');
+  assert.equal(m.browser_specific_settings.gecko_android.strict_min_version, '142.0');
+  assert.deepEqual(m.icons, { '128': 'icon128.png' });
+  assert.deepEqual(m.action.default_icon, m.icons);
   assert.deepEqual(m.browser_specific_settings.gecko.data_collection_permissions.required, ['browsingActivity']);
   assert.deepEqual(m.background.scripts, ['service-worker.js']);
   assert.equal(m.background.service_worker, undefined);
@@ -125,5 +128,32 @@ test('unrelated extension messages do not start a scan', () => {
   const state = setup();
   assert.equal(state.listener({ type: 'unrelated' }, {}, () => { throw new Error('unexpected reply'); }), undefined);
   assert.equal(state.requests.length, 0);
+});
+
+test('popup treats page-controlled HTML and severity as text', () => {
+  class Node {
+    constructor(tag) { this.tag = tag; this.children = []; this.textContent = ''; }
+    append(...nodes) { this.children.push(...nodes); }
+    replaceChildren(...nodes) { this.children = nodes; }
+    addEventListener() {}
+    set innerHTML(_) { throw new Error('Unsafe HTML rendering'); }
+  }
+  const nodes = new Map();
+  const document = {
+    querySelector: selector => { if (!nodes.has(selector)) nodes.set(selector, new Node(selector)); return nodes.get(selector); },
+    createElement: tag => new Node(tag),
+    createTextNode: text => Object.assign(new Node('#text'), { textContent: text }),
+  };
+  const attack = '<img src=x onerror=alert(1)>';
+  const data = { meta: { url: attack, hostname: attack }, findings: [{ severity: attack, title: attack, detail: attack, evidence: attack }], technologies: [attack], cookies: [], endpoints: [], scripts: [], forms: [] };
+  const context = vm.createContext({ document, browser: {}, data });
+  vm.runInContext(fs.readFileSync(path.join(root, 'popup.js'), 'utf8'), context);
+  vm.runInContext('render(data)', context);
+  const all = node => [node, ...node.children.flatMap(all)];
+  const rendered = [...nodes.values()].flatMap(all);
+  assert.ok(rendered.some(node => node.textContent === attack));
+  assert.equal(rendered.some(node => node.tag === 'img'), false);
+  assert.ok(rendered.some(node => node.className === 'card finding info'));
+  assert.equal(nodes.get('#summary').hidden, false);
 });
 

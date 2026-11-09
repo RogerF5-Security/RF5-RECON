@@ -32,7 +32,10 @@ def build(destination):
         "id": ADDON_ID,
         "strict_min_version": "140.0",
         "data_collection_permissions": {"required": ["browsingActivity"]},
-    }}
+    }, "gecko_android": {"strict_min_version": "142.0"}}
+    manifest["icons"] = {"128": "icon128.png"}
+    manifest["action"]["default_icon"] = {"128": "icon128.png"}
+    shutil.copyfile(ROOT / "scripts/firefox_popup.js", package / "popup.js")
     manifest["description"] = "Reconocimiento web bajo demanda: DNS, headers, cookies, recursos observados y reporte JSON."
     (package / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
